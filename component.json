@@ -1,8 +1,8 @@
 {
   "name": "dom-emitter",
-  "repo": "component/dom-emitter",
-  "description": "A class designed to manage the events of a view",
-  "version": "0.1.0",
+  "repo": "jkroso/dom-emitter",
+  "description": "Manage the events of a DOM element",
+  "version": "0.2.0",
   "keywords": ["event", "events", "subscriptions", "dom", "emitter"],
   "dependencies": {
     "jkroso/delegate": "*",

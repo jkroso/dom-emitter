@@ -1,0 +1,21 @@
+{
+  "name": "dom-emitter",
+  "description": "Manage the events of a DOM element",
+  "version": "0.2.0",
+  "keywords": [
+    "event",
+    "events",
+    "subscriptions",
+    "dom",
+    "emitter"
+  ],
+  "dependencies": {
+    "delegate": "git://github.com/jkroso/delegate",
+    "dom-event": "git://github.com/jkroso/dom-event",
+    "event": "git://github.com/jkroso/event"
+  },
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}

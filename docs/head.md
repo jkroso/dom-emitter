@@ -1,38 +1,35 @@
 # Dom Emitter
 
-Designed to help manage dom events for a view. It can be inherited or as a standalone instance
-
-Example standalone useage:
+Manage the events of a DOM element
 
 ```js
-function ButtonView () {
-	this.el = document.createElement('div')
-	this.events = new DomEmitter(this.el, this)
+var body = new DomEmitter(document.body)
+body.on('click', console.log)
+body.emit('click', {x:50,y:112})
+```
+It is also designed for convenient use alongside a MVC style view. a.k.a presenter
+
+```js
+function Button () {
+	this.view = document.createElement('button')
+	this.events = new DomEmitter(this.view, this)
 	this.events.on('click')
 }
-ButtonView.prototype.onClick = function(e) {
-	this.el.style.backgroundColor = 'red'
-}
+Button.prototype.onClick = console.log
+new Button().events.emit('click', {x:50,y:112})
 ```
 
-Or the equivilant using inheritance:
-
-```js
-function ButtonView () {
-	this.view = document.createElement('div')
-	DomEmitter.call(this)
-	this.on('click')
-}
-ButtonView.prototype.onClick = function(e) {
-	this.view.style.backgroundColor = 'red'
-}
-```
+Custom events are handled the same way as native so you treat it just like a normal event emitter. The only difference is that events propogate up and down the DOM so you can bind to them above the target node.
 
 ## Getting Started
 
-With component(1)
+With component
 
-	$ component install jkroso/dom-emitter
+	$ component install jkroso/dom-emitter --save
+
+With npm
+
+	$ npm install jkroso/dom-emitter --save
 
 ## API
 
