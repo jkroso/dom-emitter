@@ -5,7 +5,6 @@
   "version": "0.1.0",
   "keywords": ["event", "events", "subscriptions", "dom", "emitter"],
   "dependencies": {
-    "jkroso/emitter": "*",
     "jkroso/delegate": "*",
     "component/event": "*",
     "jkroso/dom-event": "*"

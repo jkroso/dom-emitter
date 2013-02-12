@@ -1,145 +1,154 @@
 var bind = require('event').bind
   , unbind = require('event').unbind
-  , delegate = require('delegate').bind
   , match = require('delegate').match
-  , Emitter = require('emitter')
-  , on = Emitter.prototype.on
-  , off = Emitter.prototype.off
-  , emit = Emitter.prototype.emit
-  , mouse = require('dom-event').mouse
-  , keyboard = require('dom-event').key
-  , custom = require('dom-event').custom
+  , domEvent = require('dom-event')
+  , mouseEvent = domEvent.mouse
+  , keyEvent = domEvent.key
+  , customEvent = domEvent.custom
 
 module.exports = DomEmitter
 
 /**
  * Initialize a `DomEmitter`
  *
- *   new DomEmitter(document.body)
  *   new DomEmitter(document.body, {
  *     onClick: console.log  
  *   })
- *   DomEmitter.call(this) // this.view will be the dom node
  *   
- * @param {Object} [view=this.view]
- * @param {Object} [context=this]
- * @api public
+ * @param {Object} view
+ * @param {Object} context
  */
 
 function DomEmitter(view, context) {
-	Emitter.call(this)
-	this.view || (this.view = view)
-	this._context = context || this
-	this._handlers = {}
+	this.__view__ = view
+	this.__context__ = context || {}
+	this.__domBindings__ = {}
+	this.behaviours = {}
 }
 
 /**
- * Bind to `event` with optional `method` name. When `method` is 
- * undefined it becomes `event` with the "on" prefix. Delegation is 
- * specified after the event name
+ * Bind to `type` with optional `method`. When `method` is 
+ * undefined it inferred from `type`. Delegation is can be
+ * specified in `type`
  *
  *    events.on('click', 'onClick')
  *    events.on('click') // implies "onClick"
  *    events.on('click', function (e) {})
  *    events.on('click .ok') // will only trigger if the click happened within a child with .ok class
  *
- * @param {String} event
+ * @param {String} type
  * @param {String} [method]
- * @return {Function} the function that was subscribed
+ * @return {Function} acts as a key to remove the behaviour
  * @api public
  */
 
-DomEmitter.prototype.on = function(event, method){
-	var parsed = parse(event)
+DomEmitter.prototype.on = function(type, method){
+	var parsed = parse(type)
 	  , name = parsed.name
-	  , handler = this._handlers[name]
-	  , self = this
+	  , binding = this.__domBindings__[name]
 
-	if (typeof method === 'string')
-		method = this._context[method]
-	else if (!method)
-		method = this._context['on' + capitalize(name)]
+	// lookup a function if one wasn't passed
+	if (typeof method !== 'function') {
+		method = getMethod(method, name, this.__context__)
+	}
 
-	if (!method) throw new Error('Can\'t find a method')
-
-	if (!handler) {
-		handler = this._handlers[name] = function dispatcher (e) {
-			emit.call(self, name, e)
+	// bind to the dom
+	if (!binding) {
+		var self = this
+		binding = this.__domBindings__[name] = function dispatcher (e) {
+			emit(self.__context__, self.behaviours[name], e)
+			
 			var selectors = dispatcher.selectors
-			if (selectors) {
-				for (var i = 0, len = selectors.length; i < len; i++) {
-					if (e.delegateTarget = match(e.target, this, selectors[i]))
-						emit.call(self, name+' '+selectors[i], e)
+			for (var i = 0, len = selectors.length; i < len; i++) {
+				if (e.delegateTarget = match(e.target, this, selectors[i])) {
+					emit(self.__context__, self.behaviours[name+' '+selectors[i]], e)
 				}
 			}
 		}
-		handler.deps = 0
-		bind(this.view, name, handler)
+		binding.deps = 0
+		binding.selectors = []
+		bind(this.__view__, name, binding)
 	}
-	handler.deps++
-	
-	if (parsed.selector)
-		handler.selectors = (handler.selectors || []).concat(parsed.selector)
 
-	on.call(this, event, method, this._context)
+	// keep count of the number of subscriptions depending on
+	// this dom binding
+	binding.deps++
+	
+	if (parsed.selector) {
+		binding.selectors = binding.selectors.concat(parsed.selector)
+	}
+
+	addBehavior(this.behaviours, type, method)
 
 	return method
 }
 
-/*!
- * Uppercase the first letter
- * @api private
- */
-function capitalize (word) {
-	return word[0].toUpperCase() + word.slice(1)
+function getMethod (name, type, context) {
+	name = typeof name === 'string'
+		? context[name]
+		: context['on' + type[0].toUpperCase() + type.slice(1)]
+	if (!name) throw new Error('Can\'t find a method for '+type)
+	return name
+}
+
+function emit (context, handlers, data) {
+	if (!handlers) return 
+	var i = handlers.length
+	while (i--) {
+		handlers[i].call(context, data)
+	}
+}
+
+function addBehavior (hash, name, fn) {
+	if (hash[name]) hash[name] = hash[name].concat(fn)
+	else hash[name] = [fn]
+}
+
+function removeBehaviour (hash, name, fn) {
+	if (hash[name]) hash[name] = hash[name].filter(function (a) {
+		return a !== fn
+	})
+	else delete hash[name]
 }
 
 /**
- * Unbind a single binding
+ * Remove a single behaviour
  * 
- * All the following a equivilent:
+ * All the following are equivilent:
  *
  *   events.off('click', 'onClick')
  *   events.off('click') // implies 'onClick'
  *   events.off('click', events.onClick)
  *
- * @param {String} [event]
+ * @param {String} type
  * @param {String} [method]
- * @return {Function} callback
- * @api public
  */
 
-DomEmitter.prototype.off = function(event, method){
-	var parsed = parse(event)
+DomEmitter.prototype.off = function(type, method){
+	var parsed = parse(type)
 	  , name = parsed.name
-	  , handler = this._handlers[name]
+	  , binding = this.__domBindings__[name]
 
-	if (typeof method === 'string') {
-		method = this._context[method]
-	}
-	else if (!method) {
-		method = this._context['on' + capitalize(name)]
-	}
-	if (!method) throw new Error('Can\'t find a method')
-
-	if (--handler.deps <= 0) {
-		delete this._handlers[name]
-		unbind(this.view, name, handler)
+	if (typeof method !== 'function') {
+		method = getMethod(method, name, this.__context__)
 	}
 
-	return method
+	if (--binding.deps <= 0) {
+		delete this.__domBindings__[name]
+		unbind(this.__view__, name, binding)
+	} 
+	else if (parsed.selector) {
+		binding.selectors = binding.selectors.filter(function (s) {
+			return s !== parsed.selector
+		})
+	}
+
+	removeBehaviour(this.behaviours, type, method)
 }
 
-/*!
- * Is it a native mouse event
- */
-var mouseRegex = /^mouse(?:up|down|move|o(?:ver|ut)|enter|leave)|(?:dbl)?click$/
-
-/*!
- * Is it a native keyboard event
- * Extract the keys title while we are at it
- */
-var keyRegex = /^key(up|down|press) +([\w\/]+(?: \w+)?)$/
+// Native events tests
+var isMouse = /^mouse(?:up|down|move|o(?:ver|ut)|enter|leave)|(?:dbl)?click$/
+var isKey = /^key(up|down|press) +([\w\/]+(?: \w+)?)$/
 
 /**
  * Create a DOM event and send it down to the DomEmitter's target
@@ -150,15 +159,17 @@ var keyRegex = /^key(up|down|press) +([\w\/]+(?: \w+)?)$/
  * @param {String} event type
  * @param {Any} data to merged with the dom event object
  */
+
 DomEmitter.prototype.emit = function (topic, data) {
-	var match, event
-	if (match = mouseRegex.exec(topic))
-		event = mouse(topic, data)
-	else if (match = keyRegex.exec(topic))
-		event = keyboard(match[1], match[2], data)
+	var match
+	if (match = isMouse.exec(topic))
+		data = mouseEvent(topic, data)
+	else if (match = isKey.exec(topic))
+		data = keyEvent(match[1], match[2], data)
 	else
-		event = custom(topic, data)
-	this.view.dispatchEvent(event)
+		data = customEvent(topic, data)
+
+	this.__view__.dispatchEvent(data)
 }
 
 /**
@@ -170,17 +181,20 @@ DomEmitter.prototype.emit = function (topic, data) {
  * @param {String} event if you want to limit to a certain type
  * @api public
  */
+
 DomEmitter.prototype.clear = function (event) {
 	if (event == null) {
-		for (event in this._callbacks)
-			this.clear(event)
-	}
-	else {
-		var handlers = this._callbacks[event]
-		  , i = handlers.length
-		while (i--)
-			if (typeof handlers[i] === 'function') 
-				this.off(event, handlers[i])
+		for (event in this.behaviours) this.clear(event)
+	} else {
+		var name = parse(event).name
+		var bindings = this.__domBindings__[name]
+
+		for (var i = 0, len = bindings.length; i < len; i++) {
+			unbind(this.__view__, bindings[i])
+		}
+
+		delete this.__domBindings__[name];
+		delete this.behaviours[event];
 	}
 }
 
