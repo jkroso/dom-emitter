@@ -39,7 +39,6 @@ function DomEmitter(view, context) {
  * @param {String} type
  * @param {String} [method]
  * @return {Function} acts as a key to remove the behaviour
- * @api public
  */
 
 DomEmitter.prototype.on = function(type, method){
@@ -146,6 +145,24 @@ DomEmitter.prototype.off = function(type, method){
 	removeBehaviour(this.behaviours, type, method)
 }
 
+/**
+ * Add listener but remove it as soon as its called once
+ * @see DomEmitter#on
+ */
+
+DomEmitter.prototype.once = function (topic, method) {
+	var self = this
+	this.on(topic, once)
+	if (typeof method !== 'function') {
+		method = getMethod(method, parse(topic).name, this.__context__)
+	}
+	function once (e) {
+		method.call(this, e)
+		self.off(topic, once)
+	}
+	return once
+}
+
 // Native events tests
 var isMouse = /^mouse(?:up|down|move|o(?:ver|ut)|enter|leave)|(?:dbl)?click$/
 var isKey = /^key(up|down|press) +([\w\/]+(?: \w+)?)$/
@@ -181,14 +198,13 @@ DomEmitter.prototype.emit = function (topic, data) {
  *   this.clear() // removes all
  *   this.clear('click') // just click handlers
  *
- * @param {String} event if you want to limit to a certain type
- * @api public
+ * @param {String} topic if you want to limit to a certain topic
  */
 
-DomEmitter.prototype.clear = function (event) {
-	if (event != null) return clearTopic(this, event)
-	for (event in this.behaviours) {
-		clearTopic(this, event)
+DomEmitter.prototype.clear = function (topic) {
+	if (topic != null) return clearTopic(this, topic)
+	for (topic in this.behaviours) {
+		clearTopic(this, topic)
 	}
 }
 
