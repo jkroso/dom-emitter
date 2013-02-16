@@ -60,7 +60,7 @@ DomEmitter.prototype.on = function(type, method){
 			
 			var selectors = dispatcher.selectors
 			for (var i = 0, len = selectors.length; i < len; i++) {
-				if (e.delegateTarget = match(e.target, this, selectors[i])) {
+				if (e.delegate = match(e.target, this, selectors[i])) {
 					emit(self.__context__, self.behaviours[name+' '+selectors[i]], e)
 				}
 			}
