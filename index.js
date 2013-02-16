@@ -161,13 +161,16 @@ var isKey = /^key(up|down|press) +([\w\/]+(?: \w+)?)$/
  */
 
 DomEmitter.prototype.emit = function (topic, data) {
-	var match
-	if (match = isMouse.exec(topic))
+	if (isMouse.test(topic)) {
 		data = mouseEvent(topic, data)
-	else if (match = isKey.exec(topic))
-		data = keyEvent(match[1], match[2], data)
-	else
+	} 
+	else if (isKey.test(topic)) {
+		topic = isKey.exec(topic)
+		data = keyEvent(topic[1], topic[2], data)
+	} 
+	else {
 		data = customEvent(topic, data)
+	}
 
 	this.__view__.dispatchEvent(data)
 }
@@ -183,19 +186,22 @@ DomEmitter.prototype.emit = function (topic, data) {
  */
 
 DomEmitter.prototype.clear = function (event) {
-	if (event == null) {
-		for (event in this.behaviours) this.clear(event)
-	} else {
-		var name = parse(event).name
-		var bindings = this.__domBindings__[name]
-
-		for (var i = 0, len = bindings.length; i < len; i++) {
-			unbind(this.__view__, bindings[i])
-		}
-
-		delete this.__domBindings__[name];
-		delete this.behaviours[event];
+	if (event != null) return clearTopic(this, event)
+	for (event in this.behaviours) {
+		clearTopic(this, event)
 	}
+}
+
+function clearTopic (self, topic) {
+	var name = parse(topic).name
+	var bindings = self.__domBindings__[name]
+
+	for (var i = 0, len = bindings.length; i < len; i++) {
+		unbind(self.__view__, bindings[i])
+	}
+
+	delete self.__domBindings__[name];
+	delete self.behaviours[topic];
 }
 
 /**
