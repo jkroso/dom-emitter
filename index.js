@@ -92,8 +92,7 @@ function getMethod (name, type, context) {
 
 function emit (context, handlers, data) {
 	if (!handlers) return 
-	var i = handlers.length
-	while (i--) {
+	for (var i = 0, len = handlers.length; i < len; i++) {
 		handlers[i].call(context, data)
 	}
 }

@@ -158,6 +158,18 @@ describe('.emit(type, options)', function () {
     e.emit('select')
     e.clear()
   })
+
+  it('should call them in the order they were added', function () {
+    var e = new DomEmitter(node)
+    var c = 0
+    e.on('test', function () {
+      assert(++c === 1)
+    })
+    e.on('test', function () {
+      assert(++c === 2)
+    })
+    e.emit('test')
+  })
   
   it('should target the event DomEmitter\'s DOM node', function (done) {
     var e = new DomEmitter(node, {
