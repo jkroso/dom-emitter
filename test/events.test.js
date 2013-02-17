@@ -184,6 +184,21 @@ describe('.emit(type, options)', function () {
     e.emit('click', {clientX:50,clientY:50})
     e.clear()
   })
+
+  it('should be cancelable', function () {
+    var e = new DomEmitter(node)
+    
+    e.on('test', function (e) {
+      assert(e.cancelable === true)
+      e.stopPropagation()
+    })
+
+    document.body.addEventListener('test', function () {
+      assert(false)
+    }, false)
+
+    e.emit('test')
+  })
 })
 
 describe('.once(topic, method:Function)', function () {
