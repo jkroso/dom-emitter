@@ -1,7 +1,7 @@
 {
   "name": "dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "keywords": [
     "event",
     "events",

@@ -2,7 +2,7 @@
   "name": "dom-emitter",
   "repo": "jkroso/dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "keywords": [
     "event",
     "events",
