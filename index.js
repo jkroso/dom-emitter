@@ -209,11 +209,9 @@ DomEmitter.prototype.clear = function (topic) {
 
 function clearTopic (self, topic) {
 	var name = parse(topic).name
-	var bindings = self.__domBindings__[name]
+	var binding = self.__domBindings__[name]
 
-	for (var i = 0, len = bindings.length; i < len; i++) {
-		unbind(self.__view__, bindings[i])
-	}
+	binding && unbind(self.__view__, binding);
 
 	delete self.__domBindings__[name];
 	delete self.behaviours[topic];
