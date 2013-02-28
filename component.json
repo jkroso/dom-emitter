@@ -2,7 +2,7 @@
   "name": "dom-emitter",
   "repo": "jkroso/dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "keywords": [
     "event",
     "events",
@@ -14,7 +14,7 @@
     "jkroso/delegate": "*",
     "component/event": "*",
     "jkroso/dom-event": "*",
-    "jkroso/dom-query": "*"
+    "ericclemmons/unique-selector": "*"
   },
   "development": {
     "component/assert": "*"
