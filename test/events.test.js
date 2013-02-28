@@ -90,6 +90,14 @@ describe('.on(event<selector>)', function () {
     happen.click(node.firstChild)
     c.should.equal(0)
   })
+
+  it('should be able to run child selectors', function () {
+    var c = 0
+    new DomEmitter(node).on('click > div', function (){ c++ })
+    happen.click(node)
+    happen.click(node.firstChild)
+    c.should.equal(1)
+  })
 })
 
 describe('.off(event)', function () {
