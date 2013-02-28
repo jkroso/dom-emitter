@@ -98,6 +98,22 @@ describe('.on(event<selector>)', function () {
     happen.click(node.firstChild)
     c.should.equal(1)
   })
+
+  it('should continue to work after the view has moved within the dom', function () {
+    var c = 0
+    new DomEmitter(node).on('click > div', function (){ c++ })
+    happen.click(node)
+    happen.click(node.firstChild)
+
+    var div = document.createElement('div')
+    document.body.appendChild(div)
+    div.appendChild(node)
+    
+    happen.click(node)
+    happen.click(node.firstChild)
+
+    c.should.equal(2)
+  })
 })
 
 describe('.off(event)', function () {

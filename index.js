@@ -1,8 +1,8 @@
 
 var event = require('event')
   , match = require('delegate').match
+  , unique = require('unique-selector')
   , domEvent = require('dom-event')
-  , globalize = require('dom-query').expand
   , mouseEvent = domEvent.mouse
   , keyEvent = domEvent.key
   , customEvent = domEvent.custom
@@ -57,18 +57,29 @@ DomEmitter.prototype.on = function(type, method){
 
 	// bind to the dom
 	if (!binding) {
-		var self = this
-		binding = this.domBindings[name] = function dispatcher (e) {
-			emit(self.context, self.behaviours[name], e)
+		var path = unique(this.view)
+		var context = this.context
+		var behaviours = this.behaviours
+
+		binding = this.domBindings[name] = function dispatcher(e){
+			// main
+			emit(context, behaviours[name], e)
 			
+			// delegated
 			var selectors = dispatcher.selectors
-			for (var i = 0, len = selectors.length; i < len; i++) {
-				var selector = globalize(selectors[i], this)
+			var len = selectors.length
+			if (!len) return
+			if (document.querySelector(path) !== this) {
+				path = unique(this)
+			}
+			for (var i = 0; i < len; i++) {
+				var selector = path+' '+selectors[i]
 				if (e.delegate = match(e.target, this, selector)) {
-					emit(self.context, self.behaviours[name+' '+selectors[i]], e)
+					emit(context, behaviours[name+' '+selectors[i]], e)
 				}
 			}
 		}
+
 		binding.deps = 0
 		binding.selectors = []
 		event.bind(this.view, name, binding)

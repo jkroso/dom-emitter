@@ -13,7 +13,7 @@
     "delegate": "git://github.com/jkroso/delegate",
     "dom-event": "git://github.com/jkroso/dom-event",
     "event": "git://github.com/jkroso/event",
-    "dom-query": "git://github.com/jkroso/dom-query"
+    "unique-selector": "git://github.com/ericclemmons/unique-selector"
   },
   "license": "MIT",
   "scripts": [
