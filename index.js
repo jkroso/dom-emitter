@@ -1,6 +1,5 @@
 
-var bind = require('event').bind
-  , unbind = require('event').unbind
+var event = require('event')
   , match = require('delegate').match
   , domEvent = require('dom-event')
   , globalize = require('dom-query').expand
@@ -11,19 +10,22 @@ var bind = require('event').bind
 module.exports = DomEmitter
 
 /**
- * Initialize a `DomEmitter`
+ * Initialize a `DomEmitter`. If you provide a `context`
+ * then that will be used to find methods. It will also
+ * be `this` inside any handlers. `context` defaults to
+ * `view`
  *
  *   new DomEmitter(document.body, {
  *     onClick: console.log  
  *   })
  *   
- * @param {Object} view
- * @param {Object} context
+ * @param {DomElement} view
+ * @param {Object} [context]
  */
 
 function DomEmitter(view, context) {
 	this.view = view
-	this.context = context || {}
+	this.context = context || view
 	this.domBindings = {}
 	this.behaviours = {}
 }
@@ -69,7 +71,7 @@ DomEmitter.prototype.on = function(type, method){
 		}
 		binding.deps = 0
 		binding.selectors = []
-		bind(this.view, name, binding)
+		event.bind(this.view, name, binding)
 	}
 
 	// keep count of the number of subscriptions depending on
@@ -136,7 +138,7 @@ DomEmitter.prototype.off = function(type, method){
 
 	if (--binding.deps <= 0) {
 		delete this.domBindings[name]
-		unbind(this.view, name, binding)
+		event.unbind(this.view, name, binding)
 	} 
 	else if (parsed.selector) {
 		binding.selectors = binding.selectors.filter(function (s) {
@@ -214,7 +216,7 @@ function clearTopic (self, topic) {
 	var name = parse(topic).name
 	var binding = self.domBindings[name]
 
-	binding && unbind(self.view, binding);
+	binding && event.unbind(self.view, binding);
 
 	delete self.domBindings[name];
 	delete self.behaviours[topic];
