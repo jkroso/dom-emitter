@@ -1,7 +1,9 @@
+
 var bind = require('event').bind
   , unbind = require('event').unbind
   , match = require('delegate').match
   , domEvent = require('dom-event')
+  , globalize = require('dom-query').expand
   , mouseEvent = domEvent.mouse
   , keyEvent = domEvent.key
   , customEvent = domEvent.custom
@@ -59,7 +61,8 @@ DomEmitter.prototype.on = function(type, method){
 			
 			var selectors = dispatcher.selectors
 			for (var i = 0, len = selectors.length; i < len; i++) {
-				if (e.delegate = match(e.target, this, selectors[i])) {
+				var selector = globalize(selectors[i], this)
+				if (e.delegate = match(e.target, this, selector)) {
 					emit(self.__context__, self.behaviours[name+' '+selectors[i]], e)
 				}
 			}

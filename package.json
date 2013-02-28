@@ -12,10 +12,15 @@
   "dependencies": {
     "delegate": "git://github.com/jkroso/delegate",
     "dom-event": "git://github.com/jkroso/dom-event",
-    "event": "git://github.com/jkroso/event"
+    "event": "git://github.com/jkroso/event",
+    "dom-query": "git://github.com/jkroso/dom-query"
   },
   "license": "MIT",
   "scripts": [
     "index.js"
-  ]
+  ],
+  "devDependencies": {
+    "mocha": "~1.8.1",
+    "chai": "~1.5.0"
+  }
 }

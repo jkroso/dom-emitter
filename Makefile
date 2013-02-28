@@ -1,6 +1,9 @@
 
-build: index.js
+build/build.js: index.js test/*
 	@component build --dev -v
+
+test/built.js: test/* index.js
+	sourcegraph -p mocha,javascript,nodeish ./test/browser.js | bigfile -p nodeish -x null > $@ 
 
 install: component.json
 	@component install --dev
@@ -13,4 +16,4 @@ docs:
 	@dox --api < index.js >> Readme.md
 	@cat docs/tail.md >> Readme.md
 
-.PHONY: clean docs build components
+.PHONY: clean docs components

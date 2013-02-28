@@ -1,11 +1,12 @@
 
-var DomEmitter = require('dom-emitter');
-var assert = require('component-assert');
+var DomEmitter = require('..')
+var assert = require('chai').assert
+var should = require('chai').should()
 
 var test = document.getElementById('test')
 var node
 beforeEach(function () {
-  test.innerHTML = '<div id="target"></div>'
+  test.innerHTML = '<div id="target"><div>first</div><div>second</div></div>'
   node = test.firstChild
 })
 
@@ -70,6 +71,24 @@ describe('.on(event, method:function)', function () {
       done()
     })
     happen.click(node)
+  })
+})
+
+describe('.on(event<selector>)', function () {
+  it('should delegate to child nodes matching the selector', function () {
+    var c = 0
+    new DomEmitter(node).on('click div', function (){ c++ })
+    happen.click(node)
+    happen.click(node.firstChild)
+    c.should.equal(1)
+  })
+
+  it('should run the selector as if this view is a top level element', function () {
+    var c = 0
+    new DomEmitter(node).on('click #target > div', function (){ c++ })
+    happen.click(node)
+    happen.click(node.firstChild)
+    c.should.equal(0)
   })
 })
 

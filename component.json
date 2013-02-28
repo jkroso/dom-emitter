@@ -13,7 +13,8 @@
   "dependencies": {
     "jkroso/delegate": "*",
     "component/event": "*",
-    "jkroso/dom-event": "*"
+    "jkroso/dom-event": "*",
+    "jkroso/dom-query": "*"
   },
   "development": {
     "component/assert": "*"
