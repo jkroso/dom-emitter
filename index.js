@@ -22,9 +22,9 @@ module.exports = DomEmitter
  */
 
 function DomEmitter(view, context) {
-	this.__view__ = view
-	this.__context__ = context || {}
-	this.__domBindings__ = {}
+	this.view = view
+	this.context = context || {}
+	this.domBindings = {}
 	this.behaviours = {}
 }
 
@@ -46,30 +46,30 @@ function DomEmitter(view, context) {
 DomEmitter.prototype.on = function(type, method){
 	var parsed = parse(type)
 	  , name = parsed.name
-	  , binding = this.__domBindings__[name]
+	  , binding = this.domBindings[name]
 
 	// lookup a function if one wasn't passed
 	if (typeof method !== 'function') {
-		method = getMethod(method, name, this.__context__)
+		method = getMethod(method, name, this.context)
 	}
 
 	// bind to the dom
 	if (!binding) {
 		var self = this
-		binding = this.__domBindings__[name] = function dispatcher (e) {
-			emit(self.__context__, self.behaviours[name], e)
+		binding = this.domBindings[name] = function dispatcher (e) {
+			emit(self.context, self.behaviours[name], e)
 			
 			var selectors = dispatcher.selectors
 			for (var i = 0, len = selectors.length; i < len; i++) {
 				var selector = globalize(selectors[i], this)
 				if (e.delegate = match(e.target, this, selector)) {
-					emit(self.__context__, self.behaviours[name+' '+selectors[i]], e)
+					emit(self.context, self.behaviours[name+' '+selectors[i]], e)
 				}
 			}
 		}
 		binding.deps = 0
 		binding.selectors = []
-		bind(this.__view__, name, binding)
+		bind(this.view, name, binding)
 	}
 
 	// keep count of the number of subscriptions depending on
@@ -128,15 +128,15 @@ function removeBehaviour (hash, name, fn) {
 DomEmitter.prototype.off = function(type, method){
 	var parsed = parse(type)
 	  , name = parsed.name
-	  , binding = this.__domBindings__[name]
+	  , binding = this.domBindings[name]
 
 	if (typeof method !== 'function') {
-		method = getMethod(method, name, this.__context__)
+		method = getMethod(method, name, this.context)
 	}
 
 	if (--binding.deps <= 0) {
-		delete this.__domBindings__[name]
-		unbind(this.__view__, name, binding)
+		delete this.domBindings[name]
+		unbind(this.view, name, binding)
 	} 
 	else if (parsed.selector) {
 		binding.selectors = binding.selectors.filter(function (s) {
@@ -156,7 +156,7 @@ DomEmitter.prototype.once = function (topic, method) {
 	var self = this
 	this.on(topic, once)
 	if (typeof method !== 'function') {
-		method = getMethod(method, parse(topic).name, this.__context__)
+		method = getMethod(method, parse(topic).name, this.context)
 	}
 	function once (e) {
 		method.call(this, e)
@@ -191,7 +191,7 @@ DomEmitter.prototype.emit = function (topic, data) {
 		data = customEvent(topic, data)
 	}
 
-	this.__view__.dispatchEvent(data)
+	this.view.dispatchEvent(data)
 }
 
 /**
@@ -212,11 +212,11 @@ DomEmitter.prototype.clear = function (topic) {
 
 function clearTopic (self, topic) {
 	var name = parse(topic).name
-	var binding = self.__domBindings__[name]
+	var binding = self.domBindings[name]
 
-	binding && unbind(self.__view__, binding);
+	binding && unbind(self.view, binding);
 
-	delete self.__domBindings__[name];
+	delete self.domBindings[name];
 	delete self.behaviours[topic];
 }
 
