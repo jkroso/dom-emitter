@@ -1,7 +1,7 @@
 {
   "name": "dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "keywords": [
     "event",
     "events",
@@ -10,10 +10,10 @@
     "emitter"
   ],
   "dependencies": {
-    "delegate": "git://github.com/jkroso/delegate",
-    "dom-event": "git://github.com/jkroso/dom-event",
+    "delegate": "https://github.com/jkroso/delegate/tarball/0.2.2",
+    "dom-event": "https://github.com/jkroso/dom-event/tarball/0.3.0",
     "event": "git://github.com/jkroso/event",
-    "unique-selector": "git://github.com/ericclemmons/unique-selector"
+    "unique-selector": "https://github.com/jkroso/unique-selector/tarball/0.0.2"
   },
   "license": "MIT",
   "scripts": [
@@ -21,6 +21,8 @@
   ],
   "devDependencies": {
     "mocha": "~1.8.1",
-    "chai": "~1.5.0"
+    "chai": "~1.5.0",
+    "bigfile": "~0.3.0",
+    "sourcegraph": "~0.5.0"
   }
 }

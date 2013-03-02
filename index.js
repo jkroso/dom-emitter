@@ -3,9 +3,6 @@ var event = require('event')
   , match = require('delegate').match
   , unique = require('unique-selector')
   , domEvent = require('dom-event')
-  , mouseEvent = domEvent.mouse
-  , keyEvent = domEvent.key
-  , customEvent = domEvent.custom
 
 module.exports = DomEmitter
 
@@ -50,14 +47,13 @@ DomEmitter.prototype.on = function(type, method){
 	  , name = parsed.name
 	  , binding = this.domBindings[name]
 
-	// lookup a function if one wasn't passed
 	if (typeof method !== 'function') {
 		method = getMethod(method, name, this.context)
 	}
 
 	// bind to the dom
 	if (!binding) {
-		var path = unique(this.view)
+		var path = unique(this.view) + ' '
 		var context = this.context
 		var behaviours = this.behaviours
 
@@ -70,11 +66,12 @@ DomEmitter.prototype.on = function(type, method){
 			var len = selectors.length
 			if (!len) return
 			if (document.querySelector(path) !== this) {
-				path = unique(this)
+				path = unique(this) + ' '
 			}
 			for (var i = 0; i < len; i++) {
-				var selector = path+' '+selectors[i]
-				if (e.delegate = match(e.target, this, selector)) {
+				var targ = match(e.target, this, path + selectors[i])
+				if (targ) {
+					e.delegate = targ
 					emit(context, behaviours[name+' '+selectors[i]], e)
 				}
 			}
@@ -85,8 +82,7 @@ DomEmitter.prototype.on = function(type, method){
 		event.bind(this.view, name, binding)
 	}
 
-	// keep count of the number of subscriptions depending on
-	// this dom binding
+	// count
 	binding.deps++
 	
 	if (parsed.selector) {
@@ -179,41 +175,51 @@ DomEmitter.prototype.once = function (topic, method) {
 }
 
 // Native events tests
-var isMouse = /^mouse(?:up|down|move|o(?:ver|ut)|enter|leave)|(?:dbl)?click$/
-var isKey = /^key(up|down|press) +([\w\/]+(?: \w+)?)$/
+var isKey = /^(key(?:up|down|press))(?: +([\w\/]+(?: \w+))?)$/
 
 /**
- * Create a DOM event and send it down to the DomEmitter's target
+ * Create a DOM event and send it down to the DomEmitter's 
+ * target. Any data you pass will be merged with the event 
+ * object
  *
  *   manager.emit('mousedown', {clientX:50, clientY:50})
  *   manager.emit('login', {user: user})
+ *   manager.emit('keydown a')
  * 
- * @param {String} event type
- * @param {Any} data to merged with the dom event object
+ * @param {String} topic
+ * @param {Any} [data]
  */
 
 DomEmitter.prototype.emit = function (topic, data) {
-	if (isMouse.test(topic)) {
-		data = mouseEvent(topic, data)
-	} 
-	else if (isKey.test(topic)) {
-		topic = isKey.exec(topic)
-		data = keyEvent(topic[1], topic[2], data)
-	} 
-	else {
-		data = customEvent(topic, data)
+	var key = isKey.exec(topic)
+	if (key) {
+		topic = key[1]
+		data.key = key[2]
 	}
 
-	this.view.dispatchEvent(data)
+	var event = domEvent(topic, data)
+
+	// merge 
+	if (data) {
+		var keys = Object.keys(data)
+		var i = keys.length
+		while (i--) {
+			key = keys[i]
+			event[key] = data[key]
+		}
+	}
+
+	this.view.dispatchEvent(event)
 }
 
 /**
- * Remove all bound functions
+ * Remove all bound functions.
+ * Optionally limited to a certain topic
  *
- *   this.clear() // removes all
+ *   this.clear() // all
  *   this.clear('click') // just click handlers
  *
- * @param {String} topic if you want to limit to a certain topic
+ * @param {String} [topic]
  */
 
 DomEmitter.prototype.clear = function (topic) {
