@@ -112,6 +112,7 @@ describe('.on(event<selector>)', function () {
     happen.click(node)
     happen.click(node.firstChild)
 
+    document.body.removeChild(div)
     c.should.equal(2)
   })
 })
