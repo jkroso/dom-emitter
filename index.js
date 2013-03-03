@@ -1,6 +1,5 @@
 
 var event = require('event')
-  , match = require('delegate').match
   , unique = require('unique-selector')
   , domEvent = require('dom-event')
 
@@ -41,7 +40,7 @@ function DomEmitter(view, context) {
  *
  * @param {String} type
  * @param {String} [method]
- * @return {Function} acts as a key to remove the behaviour
+ * @return {Function} acts as a key to remove the behavior
  */
 
 DomEmitter.prototype.on = function(type, method){
@@ -72,7 +71,7 @@ DomEmitter.prototype.on = function(type, method){
 				path = unique(this) + ' '
 			}
 			for (var i = 0; i < len; i++) {
-				var targ = match(e.target, this, path + selectors[i])
+				var targ = match(this, e.target, path + selectors[i])
 				if (targ) {
 					e.delegate = targ
 					emit(context, behaviours[name+' '+selectors[i]], e)
@@ -155,9 +154,32 @@ function removeBehaviour (hash, name, fn) {
 }
 
 /**
- * Remove a single behaviour
+ * Return the first Element between `bottom` and 
+ * `top` that matches the selector
+ *
+ * @param {Element} top
+ * @param {Element} bottom
+ * @param {String} selector
+ * @return {Element}
+ * @api private
+ */
+
+function match (top, bottom, selector) {
+	var nodes = top.querySelectorAll(selector)
+	var len = nodes.length
+
+	while (bottom && bottom !== top) {
+		for (var i = 0; i < len; i++) {
+			if (nodes[i] === bottom) return bottom
+		}
+		bottom = bottom.parentElement
+	}
+}
+
+/**
+ * Remove a single behavior
  * 
- * All the following are equivilent:
+ * All the following are equivalent:
  *
  *   events.off('click', 'onClick')
  *   events.off('click') // implies 'onClick'
