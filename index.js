@@ -207,29 +207,20 @@ DomEmitter.prototype.once = function (topic, method) {
 	return once
 }
 
-// Native events tests
-var isKey = /^(key(?:up|down|press))(?: +([\w\/]+(?: \w+))?)$/
-
 /**
  * Create a DOM event and send it down to the DomEmitter's 
  * target. Any data you pass will be merged with the event 
  * object
  *
- *   manager.emit('mousedown', {clientX:50, clientY:50})
+ *   manager.emit('mousedown')
  *   manager.emit('login', {user: user})
- *   manager.emit('keydown a')
+ *   manager.emit('keydown', {key: 'enter'})
  * 
  * @param {String} topic
  * @param {Any} [data]
  */
 
 DomEmitter.prototype.emit = function (topic, data) {
-	var key = isKey.exec(topic)
-	if (key) {
-		topic = key[1]
-		data.key = key[2]
-	}
-
 	var event = domEvent(topic, data)
 
 	// merge 
@@ -237,7 +228,7 @@ DomEmitter.prototype.emit = function (topic, data) {
 		var keys = Object.keys(data)
 		var i = keys.length
 		while (i--) {
-			key = keys[i]
+			var key = keys[i]
 			event[key] = data[key]
 		}
 	}
