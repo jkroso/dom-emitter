@@ -30,9 +30,9 @@ describe('new DomEmitter(<dom>, <object>)', function () {
         'mousedown div': spy
       }
     }
-    chai.spy(DomEmitter.prototype, 'on')
     var e = new DomEmitter(node, self)
-    DomEmitter.prototype.on.should.have.been.called
+    e.behaviours.should.have.keys(['click > div', 'mousedown div'])
+    e.domBindings.should.have.keys(['click', 'mousedown'])
   })
 })
 

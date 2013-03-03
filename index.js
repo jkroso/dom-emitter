@@ -8,16 +8,15 @@ module.exports = DomEmitter
 
 /**
  * Initialize a `DomEmitter`. If you provide a `context`
- * then that will be used to find methods. It will also
- * be `this` inside any handlers. `context` defaults to
- * `view`
+ * then that will be the source of implies methods. It 
+ * will also be `this` inside handlers.
  *
  *   new DomEmitter(document.body, {
  *     onClick: console.log  
  *   })
  *   
  * @param {DomElement} view
- * @param {Object} [context]
+ * @param {Object} [context] defaults to `view`
  */
 
 function DomEmitter(view, context) {
@@ -25,6 +24,9 @@ function DomEmitter(view, context) {
 	this.context = context || view
 	this.domBindings = {}
 	this.behaviours = {}
+	if (typeof this.context.events == 'object') {
+		bindAll(this, this.context.events)
+	}
 }
 
 /**
@@ -35,7 +37,7 @@ function DomEmitter(view, context) {
  *    events.on('click', 'onClick')
  *    events.on('click') // implies "onClick"
  *    events.on('click', function (e) {})
- *    events.on('click .ok') // will only trigger if the click happened within a child with .ok class
+ *    events.on('click .ok') // delegates to `.ok`
  *
  * @param {String} type
  * @param {String} [method]
@@ -43,11 +45,12 @@ function DomEmitter(view, context) {
  */
 
 DomEmitter.prototype.on = function(type, method){
+	if (typeof type == 'object') return bindAll(this, type)
 	var parsed = parse(type)
 	  , name = parsed.name
 	  , binding = this.domBindings[name]
 
-	if (typeof method !== 'function') {
+	if (typeof method != 'function') {
 		method = getMethod(method, name, this.context)
 	}
 
@@ -94,6 +97,33 @@ DomEmitter.prototype.on = function(type, method){
 	return method
 }
 
+/**
+ * bind several functions
+ *
+ * @param {DomEmitter} self
+ * @param {Object} events
+ * @api private
+ */
+
+function bindAll(self, events){
+	for (var event in events) {
+		var fn = events[event]
+		if (typeof fn != 'function') {
+			throw new Error(event+' not a function')
+		}
+		self.on(event, fn)
+	}
+}
+
+/**
+ * lookup an events implied method in the `context` object
+ * 
+ * @param {String} [name]
+ * @param {String} type
+ * @param {Object} context
+ * @api private
+ */
+
 function getMethod (name, type, context) {
 	name = typeof name === 'string'
 		? context[name]
@@ -115,10 +145,13 @@ function addBehavior (hash, name, fn) {
 }
 
 function removeBehaviour (hash, name, fn) {
-	if (hash[name]) hash[name] = hash[name].filter(function (a) {
-		return a !== fn
-	})
-	else delete hash[name]
+	if (hash[name]) {
+		hash[name] = hash[name].filter(function (a) {
+			return a !== fn
+		})
+	} else {
+		delete hash[name]
+	}
 }
 
 /**
