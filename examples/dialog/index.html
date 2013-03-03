@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+		button {
+			padding: 10px;
+			margin: 20px;
+		}
+		.dialog {
+			position: fixed;
+			top:200px;
+			left:50%;
+			padding: 20px;
+			margin-left: -100px;
+			border:1px solid #ccc;
+			border-radius: 3px;
+		}
+	</style>
+	<script src="../../dist/dom-emitter.js"></script>
+</head>
+<body>
+	<button>try me!</button>
+	<div>
+		<button>don't bother!</button>
+	</div>
+	<script>
+		new DomEmitter(document.body).on('click > button', function(e){
+			new Dialog()
+		})
+
+		function Dialog(){
+			this.view = document.createElement('div')
+			this.view.className = 'dialog'
+			this.view.innerHTML = '<p>Hello</p><button class="nice">hello</button><button class="naughty">bye</button>'
+			this.events = new DomEmitter(this.view, this)
+			document.body.appendChild(this.view)
+		}
+		Dialog.prototype.events = {
+			'click > button.nice': function(e){
+				document.body.removeChild(this.view)
+			},
+			'click > button.naughty': function(e){
+				this.view.firstChild.innerText = 'try again!!'
+			}
+		}
+	</script>
+</body>
+</html>
