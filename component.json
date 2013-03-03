@@ -11,7 +11,6 @@
     "emitter"
   ],
   "dependencies": {
-    "jkroso/delegate": "*",
     "component/event": "*",
     "jkroso/dom-event": "*",
     "ericclemmons/unique-selector": "*"
