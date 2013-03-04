@@ -137,20 +137,66 @@ describe('.on(<string #{selector}>)', function () {
     spy.should.have.been.called.once
   })
 
-  it('should continue to work after the view has moved within the dom', function () {
-    new DomEmitter(node).on('click > div', spy)
-    happen.click(node)
-    happen.click(node.firstChild)
+  describe('when the emitters node is moved', function () {
+    beforeEach(function () {
+      node.removeAttribute('id')
+    })
 
-    var div = document.createElement('div')
-    document.body.appendChild(div)
-    div.appendChild(node)
+    it('within the same document', function () {
+      new DomEmitter(node).on('click > div', spy)
+      happen.click(node)
+      happen.click(node.firstChild)
+
+      var div = document.createElement('div')
+      document.body.appendChild(div)
+      div.appendChild(node)
+      
+      happen.click(node)
+      happen.click(node.firstChild)
+
+      spy.should.have.been.called.twice
+      document.body.removeChild(div)
+    })
     
-    happen.click(node)
-    happen.click(node.firstChild)
+    it('added to the document', function () {
+      node.parentElement.removeChild(node)
+      new DomEmitter(node).on('click > div', spy)
+      test.appendChild(node)
+      // Note: events don't bubble when the target is not
+      // a part of the document so delegation is useless until
+      // you have inserted the node into the main document
+      happen.click(node)
+      happen.click(node.firstChild)
 
-    spy.should.have.been.called.twice
-    document.body.removeChild(div)
+      spy.should.have.been.called.once
+    })
+
+    it('added after a similar node', function () {
+      node.parentElement.removeChild(node)
+      var clone = node.cloneNode(true)
+      new DomEmitter(node).on('click > div', spy)
+      test.appendChild(clone)
+      test.appendChild(node)
+      happen.click(node.firstChild)
+      spy.should.have.been.called.once
+    })
+
+    it('added below a similar node', function () {
+      var regres = document.querySelector('.regression.test')
+      regres.parentElement.removeChild(regres)
+      var clone = regres.cloneNode(true)
+
+      new DomEmitter(regres).on('click > .a', spy)
+      new DomEmitter(clone).on('click > .a', spy)
+
+      var mocha = document.getElementById('mocha')
+      regres.appendChild(clone)
+      document.body.insertBefore(regres, test)
+      regres.insertBefore(clone, regres.firstChild)
+
+      happen.click(clone.firstChild)
+      spy.should.have.been.called.once
+    })
   })
 })
 

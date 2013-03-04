@@ -46,8 +46,8 @@ function DomEmitter(view, context) {
 DomEmitter.prototype.on = function(type, method){
 	if (typeof type == 'object') return bindAll(this, type)
 	var parsed = parse(type)
-	  , name = parsed.name
-	  , binding = this.domBindings[name]
+	var name = parsed.name
+	var binding = this.domBindings[name]
 
 	if (typeof method != 'function') {
 		method = getMethod(method, name, this.context)
@@ -66,8 +66,8 @@ DomEmitter.prototype.on = function(type, method){
 			// delegated
 			var selectors = dispatcher.selectors
 			var len = selectors.length
-			if (!len) return
-			if (document.querySelector(path) !== this) {
+			if (!len || e.target === this) return
+			if (!(document.querySelector(path) === this && /^(?:#|BODY)/.test(path))) {
 				path = unique(this) + ' '
 			}
 			for (var i = 0; i < len; i++) {
@@ -191,8 +191,8 @@ function match (top, bottom, selector) {
 
 DomEmitter.prototype.off = function(type, method){
 	var parsed = parse(type)
-	  , name = parsed.name
-	  , binding = this.domBindings[name]
+	var name = parsed.name
+	var binding = this.domBindings[name]
 
 	if (typeof method !== 'function') {
 		method = getMethod(method, name, this.context)
