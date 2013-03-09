@@ -148,9 +148,9 @@ function removeBehaviour (hash, name, fn) {
 		hash[name] = hash[name].filter(function (a) {
 			return a !== fn
 		})
-	} else {
-		delete hash[name]
+		if (hash[name].length) return
 	}
+	delete hash[name]
 }
 
 /**
@@ -190,11 +190,18 @@ function match (top, bottom, selector) {
  */
 
 DomEmitter.prototype.off = function(type, method){
+	if (typeof type == 'object') {
+		for (var name in type) {
+			this.off(name, type[name])
+		}
+		return this
+	}
+
 	var parsed = parse(type)
 	var name = parsed.name
 	var binding = this.domBindings[name]
 
-	if (typeof method !== 'function') {
+	if (typeof method != 'function') {
 		method = getMethod(method, name, this.context)
 	}
 
@@ -212,14 +219,14 @@ DomEmitter.prototype.off = function(type, method){
 }
 
 /**
- * Add listener but remove it as soon as its called once
+ * Add listener but remove it after one call
  * @see DomEmitter#on
  */
 
 DomEmitter.prototype.once = function (topic, method) {
 	var self = this
 	this.on(topic, once)
-	if (typeof method !== 'function') {
+	if (typeof method != 'function') {
 		method = getMethod(method, parse(topic).name, this.context)
 	}
 	function once (e) {
@@ -245,7 +252,7 @@ DomEmitter.prototype.once = function (topic, method) {
 DomEmitter.prototype.emit = function (topic, data) {
 	var event = domEvent(topic, data)
 
-	// merge 
+	// fast merge 
 	if (data) {
 		var keys = Object.keys(data)
 		var i = keys.length

@@ -246,6 +246,21 @@ describe('.off(<string>, <string>)', function(){
   })
 })
 
+describe('.off(<object>)', function () {
+  it('should unbind all methods in the object', function () {
+    var e = new DomEmitter(node)
+    var methods = {
+      dblclick: spy,
+      click: spy
+    }
+    e.on(methods)
+    e.off(methods)
+    happen.click(node)
+    happen.dblclick(node)
+    spy.should.not.have.been.called
+  })
+})
+
 describe('.off(<string>, <function>)', function () {4
   it('should remove the given function', function () {
     var e = new DomEmitter(node)
