@@ -115,7 +115,7 @@ events.off('click', events.onClick)
 
 ### DomEmitter.once()
 
-  Add listener but remove it as soon as its called once
+  Add listener but remove it after one call
 
 ### DomEmitter.emit(topic:String, [data]:Any)
 
