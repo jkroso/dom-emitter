@@ -23,7 +23,7 @@ describe('new DomEmitter(<dom>, <object>)', function () {
     e.context.should.equal(self)
   })
 
-  it('if `context` has an `events` property it should be passed to `.on`', function () {
+  it.skip('if `context` has an `events` property it should be passed to `.on`', function () {
     var self = {
       events: {
         'click > div': spy,

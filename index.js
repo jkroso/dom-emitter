@@ -23,9 +23,6 @@ function DomEmitter(view, context) {
 	this.context = context || view
 	this.domBindings = {}
 	this.behaviours = {}
-	if (typeof this.context.events == 'object') {
-		bindAll(this, this.context.events)
-	}
 }
 
 /**
