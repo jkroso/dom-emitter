@@ -1,20 +1,16 @@
+GRAPH=node_modules/.bin/sourcegraph.js -p nodeish,mocha
+COMPILE=node_modules/.bin/_bigfile -p nodeish
+
+test: test/built.js
+	open test/index.html
+
+clean:
+	@rm -f test/built.js
 
 test/built.js: index.js test/*
-	@node_modules/.bin/sourcegraph.js test/browser.js \
-		--plugins mocha,nodeish,javascript \
-		| node_modules/.bin/bigfile.js \
-			--export null \
-			--plugins nodeish,javascript > test/built.js
+	@$(GRAPH) test/browser.js | $(COMPILE) -x null > $@
 
-Readme.md: docs/* index.js
-	@cat docs/head.md > $@
-	@dox --api < index.js >> $@
-	@cat docs/tail.md >> $@
+dom-emitter.js: index.js
+	@$(GRAPH) index.js | $(COMPILE) -x DomEmitter > $@
 
-dist/dom-emitter.js: index.js
-	@mkdir -p dist
-	@node_modules/.bin/sourcegraph.js index.js \
-		--plugins nodeish,javascript \
-		| node_modules/.bin/bigfile \
-			--export DomEmitter \
-			--plugins nodeish,javascript > $@
+.PHONY: all test clean

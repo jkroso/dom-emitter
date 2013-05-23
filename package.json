@@ -1,7 +1,7 @@
 {
   "name": "dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "keywords": [
     "event",
     "events",
@@ -10,7 +10,7 @@
     "emitter"
   ],
   "dependencies": {
-    "dom-event": "https://github.com/jkroso/dom-event/tarball/0.3.0",
+    "dom-event": "http://github.com/jkroso/dom-event/tarball/0.3.0",
     "event": "git://github.com/jkroso/event",
     "unique-selector": "https://github.com/jkroso/unique-selector/tarball/0.0.2"
   },
@@ -19,10 +19,11 @@
     "index.js"
   ],
   "devDependencies": {
-    "mocha": "~1.8.1",
-    "chai": "~1.5.0",
-    "bigfile": "~0.3.0",
-    "sourcegraph": "~0.5.0",
-    "chai-spies": "~0.5.1"
+    "mocha": "~1.10.0",
+    "chai": "~1.6.0",
+    "bigfile": "~0.5.0",
+    "sourcegraph": "~0.7.1",
+    "chai-spies": "~0.5.1",
+    "happen": "~0.1.2"
   }
 }

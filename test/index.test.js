@@ -4,6 +4,7 @@ var DomEmitter = require('..')
   , expect = chai.expect
   , should = chai.should()
   , spies = require('chai-spies')
+  , happen = require('happen/src/happen')
 
 chai.use(spies)
 
