@@ -16,7 +16,7 @@
 			border-radius: 3px;
 		}
 	</style>
-	<script src="../../dist/dom-emitter.js"></script>
+	<script src="../../dom-emitter.js"></script>
 </head>
 <body>
 	<button>try me!</button>
@@ -31,17 +31,19 @@
 		function Dialog(){
 			this.view = document.createElement('div')
 			this.view.className = 'dialog'
-			this.view.innerHTML = '<p>Hello</p><button class="nice">hello</button><button class="naughty">bye</button>'
+			this.view.innerHTML = '<p>Hello</p><button class="nice">hello</button><button class="mean">bye</button>'
 			this.events = new DomEmitter(this.view, this)
+			this.events.on('click > button.nice', 'destroy')
+			this.events.on('click button.mean', 'taunt')
 			document.body.appendChild(this.view)
 		}
-		Dialog.prototype.events = {
-			'click > button.nice': function(e){
-				document.body.removeChild(this.view)
-			},
-			'click > button.naughty': function(e){
-				this.view.firstChild.innerText = 'try again!!'
-			}
+
+		Dialog.prototype.destroy = function(e){
+			document.body.removeChild(this.view)
+		}
+
+		Dialog.prototype.taunt = function(e){
+			this.view.firstChild.innerText = 'Try again!'
 		}
 	</script>
 </body>
