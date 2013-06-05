@@ -1,15 +1,11 @@
 
 var DomEmitter = require('..')
-  , chai = require('chai')
-  , expect = chai.expect
-  , should = chai.should()
-  , spies = require('chai-spies')
+  , chai = require('./chai')
   , happen = require('happen/src/happen')
 
-chai.use(spies)
-
 var test = document.getElementById('test')
-var node, spy
+var node
+var spy
 
 beforeEach(function () {
   test.innerHTML = '<div id="target"><div>first</div><div>second</div></div>'

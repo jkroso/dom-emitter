@@ -2,7 +2,7 @@
   "name": "dom-emitter",
   "repo": "jkroso/dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.5.0",
+  "version": "0.5.5",
   "keywords": [
     "event",
     "events",
@@ -11,12 +11,16 @@
     "emitter"
   ],
   "dependencies": {
-    "component/event": "*",
-    "jkroso/dom-event": "*",
-    "ericclemmons/unique-selector": "*"
+    "component/event": "0.1.0",
+    "jkroso/dom-event": "0.3.1",
+    "jkroso/unique-selector": "0.0.2"
   },
   "development": {
-    "component/assert": "*"
+    "chaijs/chai-spies": "0.5.1",
+    "chaijs/chai": "1.6.1",
+    "tmcw/happen": "v0.1.2",
+    "visionmedia/mocha": "1.9.0",
+    "jkroso/serve": "1.2.3"
   },
   "license": "MIT",
   "scripts": [

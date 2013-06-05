@@ -16,7 +16,6 @@
 			border-radius: 3px;
 		}
 	</style>
-	<script src="../../dom-emitter.js"></script>
 </head>
 <body>
 	<button>try me!</button>
@@ -24,6 +23,7 @@
 		<button>don't bother!</button>
 	</div>
 	<script>
+		var DomEmitter = require('../..')
 		new DomEmitter(document.body).on('click > button', function(e){
 			new Dialog()
 		})
