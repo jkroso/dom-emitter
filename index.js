@@ -14,14 +14,14 @@ module.exports = DomEmitter
  *     onClick: console.log  
  *   })
  *   
- * @param {DomElement} view
- * @param {Object} [context] defaults to `view`
+ * @param {DomElement} el
+ * @param {Object} [context] defaults to `el`
  */
 
-function DomEmitter(view, context) {
-	this.view = view
-	this.context = context || view
-	this.domBindings = {}
+function DomEmitter(el, context) {
+	this.el = el
+	this.context = context || el
+	this._bindings = {}
 	this.behaviours = {}
 }
 
@@ -37,14 +37,14 @@ function DomEmitter(view, context) {
  *
  * @param {String} type
  * @param {String} [method]
- * @return {Function} acts as a key to remove the behavior
+ * @return {this}
  */
 
 DomEmitter.prototype.on = function(type, method){
 	if (typeof type == 'object') return bindAll(this, type)
 	var parsed = parse(type)
 	var name = parsed.name
-	var binding = this.domBindings[name]
+	var binding = this._bindings[name]
 
 	if (typeof method != 'function') {
 		method = getMethod(method, name, this.context)
@@ -52,11 +52,11 @@ DomEmitter.prototype.on = function(type, method){
 
 	// bind to the dom
 	if (!binding) {
-		var path = unique(this.view) + ' '
+		var path = unique(this.el) + ' '
 		var context = this.context
 		var behaviours = this.behaviours
 
-		binding = this.domBindings[name] = function dispatcher(e){
+		binding = this._bindings[name] = function dispatcher(e){
 			// main
 			emit(context, behaviours[name], e)
 			
@@ -78,7 +78,7 @@ DomEmitter.prototype.on = function(type, method){
 
 		binding.deps = 0
 		binding.selectors = []
-		event.bind(this.view, name, binding)
+		event.bind(this.el, name, binding)
 	}
 
 	// count
@@ -90,7 +90,7 @@ DomEmitter.prototype.on = function(type, method){
 
 	addBehavior(this.behaviours, type, method)
 
-	return method
+	return this
 }
 
 /**
@@ -184,6 +184,7 @@ function match (top, bottom, selector) {
  *
  * @param {String} type
  * @param {String} [method]
+ * @return {this}
  */
 
 DomEmitter.prototype.off = function(type, method){
@@ -196,15 +197,15 @@ DomEmitter.prototype.off = function(type, method){
 
 	var parsed = parse(type)
 	var name = parsed.name
-	var binding = this.domBindings[name]
+	var binding = this._bindings[name]
 
 	if (typeof method != 'function') {
 		method = getMethod(method, name, this.context)
 	}
 
 	if (--binding.deps <= 0) {
-		delete this.domBindings[name]
-		event.unbind(this.view, name, binding)
+		delete this._bindings[name]
+		event.unbind(this.el, name, binding)
 	} 
 	else if (parsed.selector) {
 		binding.selectors = binding.selectors.filter(function (s) {
@@ -213,6 +214,8 @@ DomEmitter.prototype.off = function(type, method){
 	}
 
 	removeBehaviour(this.behaviours, type, method)
+
+	return this
 }
 
 /**
@@ -221,16 +224,14 @@ DomEmitter.prototype.off = function(type, method){
  */
 
 DomEmitter.prototype.once = function (topic, method) {
-	var self = this
-	this.on(topic, once)
 	if (typeof method != 'function') {
 		method = getMethod(method, parse(topic).name, this.context)
 	}
-	function once (e) {
+	var self = this
+	return this.on(topic, function once(e){
 		method.call(this, e)
 		self.off(topic, once)
-	}
-	return once
+	})
 }
 
 /**
@@ -244,6 +245,7 @@ DomEmitter.prototype.once = function (topic, method) {
  * 
  * @param {String} topic
  * @param {Any} [data]
+ * @return {this}
  */
 
 DomEmitter.prototype.emit = function (topic, data) {
@@ -259,7 +261,9 @@ DomEmitter.prototype.emit = function (topic, data) {
 		}
 	}
 
-	this.view.dispatchEvent(event)
+	this.el.dispatchEvent(event)
+
+	return this
 }
 
 /**
@@ -270,6 +274,7 @@ DomEmitter.prototype.emit = function (topic, data) {
  *   this.clear('click') // just click handlers
  *
  * @param {String} [topic]
+ * @return {this}
  */
 
 DomEmitter.prototype.clear = function (topic) {
@@ -277,15 +282,16 @@ DomEmitter.prototype.clear = function (topic) {
 	for (topic in this.behaviours) {
 		clearTopic(this, topic)
 	}
+	return this
 }
 
 function clearTopic (self, topic) {
 	var name = parse(topic).name
-	var binding = self.domBindings[name]
+	var binding = self._bindings[name]
 
-	binding && event.unbind(self.view, binding);
+	binding && event.unbind(self.el, binding);
 
-	delete self.domBindings[name];
+	delete self._bindings[name];
 	delete self.behaviours[topic];
 }
 

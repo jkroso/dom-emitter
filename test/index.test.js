@@ -91,8 +91,9 @@ describe('.on(<string>, <function>)', function () {
     spy.should.have.been.called
   })
 
-  it('should return the given function', function () {
-    new DomEmitter(node).on('click', spy).should.equal(spy)
+  it('should return `this`', function () {
+    var emitter = new DomEmitter(node)
+    emitter.on('click', spy).should.equal(emitter)
   })
 
   it('should call in the context given', function (done) {
