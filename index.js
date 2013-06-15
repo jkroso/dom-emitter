@@ -1,7 +1,7 @@
 
-var event = require('event')
-  , unique = require('unique-selector')
+var unique = require('unique-selector')
   , domEvent = require('dom-event')
+  , event = require('event')
 
 module.exports = DomEmitter
 
@@ -22,7 +22,7 @@ function DomEmitter(el, context) {
 	this.el = el
 	this.context = context || el
 	this._bindings = {}
-	this.behaviours = {}
+	this._behaviours = {}
 }
 
 /**
@@ -44,17 +44,17 @@ DomEmitter.prototype.on = function(type, method){
 	if (typeof type == 'object') return bindAll(this, type)
 	var parsed = parse(type)
 	var name = parsed.name
-	var binding = this._bindings[name]
+	var binding = (this._bindings || (this._bindings = {}))[name]
 
 	if (typeof method != 'function') {
-		method = getMethod(method, name, this.context)
+		method = getMethod(method, name, getCtx(this))
 	}
 
 	// bind to the dom
 	if (!binding) {
 		var path = unique(this.el) + ' '
-		var context = this.context
-		var behaviours = this.behaviours
+		var context = getCtx(this)
+		var behaviours = this._behaviours || (this._behaviours = {})
 
 		binding = this._bindings[name] = function dispatcher(e){
 			// main
@@ -88,7 +88,7 @@ DomEmitter.prototype.on = function(type, method){
 		binding.selectors = binding.selectors.concat(parsed.selector)
 	}
 
-	addBehavior(this.behaviours, type, method)
+	addBehavior(this._behaviours, type, method)
 
 	return this
 }
@@ -128,26 +128,35 @@ function getMethod (name, type, context) {
 	return name
 }
 
-function emit (context, handlers, data) {
+function emit (ctx, handlers, data) {
 	if (!handlers) return 
 	for (var i = 0, len = handlers.length; i < len; i++) {
-		handlers[i].call(context, data)
+		handlers[i].call(ctx, data)
 	}
 }
 
-function addBehavior (hash, name, fn) {
-	if (hash[name]) hash[name] = hash[name].concat(fn)
-	else hash[name] = [fn]
+/**
+ * get the execution context for `emitter`
+ * 
+ * @param {DomEmitter} emitter
+ * @return {Object}
+ */
+
+function getCtx(emitter){
+	return emitter.context || emitter
 }
 
-function removeBehaviour (hash, name, fn) {
-	if (hash[name]) {
-		hash[name] = hash[name].filter(function (a) {
-			return a !== fn
-		})
-		if (hash[name].length) return
-	}
-	delete hash[name]
+function addBehavior (obj, name, fn) {
+	if (obj[name]) obj[name] = obj[name].concat(fn)
+	else obj[name] = [fn]
+}
+
+function removeBehaviour (obj, name, fn) {
+	if (!obj[name]) return
+	obj[name] = obj[name].filter(function (a) {
+		return a !== fn
+	})
+	if (!obj[name].length) delete obj[name]
 }
 
 /**
@@ -188,6 +197,7 @@ function match (top, bottom, selector) {
  */
 
 DomEmitter.prototype.off = function(type, method){
+	if (!this._bindings) return this
 	if (typeof type == 'object') {
 		for (var name in type) {
 			this.off(name, type[name])
@@ -200,20 +210,19 @@ DomEmitter.prototype.off = function(type, method){
 	var binding = this._bindings[name]
 
 	if (typeof method != 'function') {
-		method = getMethod(method, name, this.context)
+		method = getMethod(method, name, getCtx(this))
 	}
 
 	if (--binding.deps <= 0) {
 		delete this._bindings[name]
 		event.unbind(this.el, name, binding)
-	} 
-	else if (parsed.selector) {
+	} else if (parsed.selector) {
 		binding.selectors = binding.selectors.filter(function (s) {
 			return s !== parsed.selector
 		})
 	}
 
-	removeBehaviour(this.behaviours, type, method)
+	removeBehaviour(this._behaviours, type, method)
 
 	return this
 }
@@ -225,7 +234,7 @@ DomEmitter.prototype.off = function(type, method){
 
 DomEmitter.prototype.once = function (topic, method) {
 	if (typeof method != 'function') {
-		method = getMethod(method, parse(topic).name, this.context)
+		method = getMethod(method, parse(topic).name, getCtx(this))
 	}
 	var self = this
 	return this.on(topic, function once(e){
@@ -251,14 +260,9 @@ DomEmitter.prototype.once = function (topic, method) {
 DomEmitter.prototype.emit = function (topic, data) {
 	var event = domEvent(topic, data)
 
-	// fast merge 
-	if (data) {
-		var keys = Object.keys(data)
-		var i = keys.length
-		while (i--) {
-			var key = keys[i]
-			event[key] = data[key]
-		}
+	// merge 
+	if (data) for (var key in data) {
+		event[key] = data[key]
 	}
 
 	this.el.dispatchEvent(event)
@@ -279,7 +283,7 @@ DomEmitter.prototype.emit = function (topic, data) {
 
 DomEmitter.prototype.clear = function (topic) {
 	if (topic != null) return clearTopic(this, topic)
-	for (topic in this.behaviours) {
+	for (topic in this._behaviours) {
 		clearTopic(this, topic)
 	}
 	return this
@@ -292,7 +296,7 @@ function clearTopic (self, topic) {
 	binding && event.unbind(self.el, binding);
 
 	delete self._bindings[name];
-	delete self.behaviours[topic];
+	delete self._behaviours[topic];
 }
 
 /**
