@@ -229,3 +229,31 @@ describe('.emit(<string>, <object>)', function(){
 		emitter.onClick.should.have.been.called()
 	})
 })
+
+describe('inheriting events', function(){
+	var Class
+	beforeEach(function(){
+		Class = function(){
+			this.el = node
+			Emitter.bindEvents(this)
+		}
+		Emitter(Class.prototype)
+	})
+	it('should work with events defined without `this.el`', function(){
+		Class.prototype.on('click', spy)
+		var a = new Class()
+		happen.click(node)
+		spy.should.have.been.called(1)
+	})
+
+	it('should be able to add events without affecting others', function(){
+		Class.prototype.on('click', spy)
+		var a = new Class()
+		a.on('mousedown', spy)
+		var b = new Class()
+		happen.mousedown(node)
+		spy.should.have.been.called(1)
+		happen.click(node)
+		spy.should.have.been.called(3)
+	})
+})

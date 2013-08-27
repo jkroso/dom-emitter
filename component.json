@@ -15,7 +15,7 @@
     "jkroso/dom-event": "0.3.1",
     "component/event": "0.1.1",
     "component/query": "0.0.1",
-    "jkroso/emitter": "0.7.0",
+    "jkroso/emitter": "0.8.0",
     "yields/merge": "1.0.0"
   },
   "development": {
