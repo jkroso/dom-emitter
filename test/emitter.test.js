@@ -48,7 +48,7 @@ describe('.on(<string>)', function(){
 
 	it('should error if no valid method is present', function(){
 		(function () {
-			new DomEmitter(node).on('click') 
+			new DomEmitter(node).on('click')
 		}).should.throw()
 	})
 })
@@ -214,7 +214,7 @@ describe('.off(<string>)', function () {
 		happen.click(node)
 		spy.should.not.have.been.called
 	})
-	
+
 	it('should error if it can\'t find a method', function () {
 		(function () {
 			new DomEmitter(node).off('click')

@@ -1,0 +1,45 @@
+<style>
+	button {
+		padding: 10px;
+		margin: 20px;
+	}
+	.dialog {
+		position: fixed;
+		top:200px;
+		left:50%;
+		padding: 20px;
+		margin-left: -100px;
+		border:1px solid #ccc;
+		border-radius: 3px;
+	}
+</style>
+
+<button>try me!</button>
+<div>
+	<button>don't bother!</button>
+</div>
+
+<script>
+	var Emitter = require('..')
+	new Emitter(document.body).on('click > button', function(e){
+		new Dialog()
+	})
+
+	function Dialog(){
+		this.el = document.createElement('div')
+		this.el.className = 'dialog'
+		this.el.innerHTML = '<p>Hello</p><button class="nice">hello</button><button class="mean">bye</button>'
+		this.events = new Emitter(this.el, this)
+		this.events.on('click > button.nice', 'destroy')
+		this.events.on('click button.mean', 'taunt')
+		document.body.appendChild(this.el)
+	}
+
+	Dialog.prototype.destroy = function(e){
+		document.body.removeChild(this.el)
+	}
+
+	Dialog.prototype.taunt = function(e){
+		this.el.firstChild.innerText = 'Try again!'
+	}
+</script>
