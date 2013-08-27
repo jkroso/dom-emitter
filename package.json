@@ -1,7 +1,7 @@
 {
   "name": "dom-emitter",
   "description": "Manage the events of a DOM element",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "keywords": [
     "event",
     "events",
@@ -9,11 +9,7 @@
     "dom",
     "emitter"
   ],
-  "dependencies": {
-    "dom-event": "http://github.com/jkroso/dom-event/tarball/0.3.1",
-    "event": "http://github.com/component/event/tarball/0.1.1",
-    "unique-selector": "https://github.com/jkroso/unique-selector/tarball/0.0.2"
-  },
+  "dependencies": {},
   "license": "MIT",
   "scripts": [
     "index.js"
