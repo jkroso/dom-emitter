@@ -1,0 +1,46 @@
+<style>
+	button {
+		padding: 10px;
+		margin: 20px;
+	}
+	.dialog {
+		position: fixed;
+		top:200px;
+		left:50%;
+		padding: 20px;
+		margin-left: -100px;
+		border:1px solid #ccc;
+		border-radius: 3px;
+	}
+</style>
+
+<div></div>
+
+<script>
+	var Emitter = require('..')
+
+	function Dialog(){
+		this.el = document.createElement('div')
+		this.el.className = 'dialog'
+		this.el.innerHTML = '<p>Hello</p><button class="nice">hello</button><button class="mean">bye</button>'
+		Emitter.bindEvents(this)
+	}
+
+	Emitter(Dialog.prototype)
+
+	Dialog.prototype.on('click', function(e){
+		if (!e.delegate) {
+			this.el.firstChild.innerText = 'You missed. lol'
+		}
+	})
+
+	Dialog.prototype.on('click button.nice', function(e){
+		document.body.removeChild(this.el)
+	})
+
+	Dialog.prototype.on('click button.mean', function(e){
+		this.el.firstChild.innerText = 'Try again!'
+	})
+
+	document.body.appendChild(new Dialog().el)
+</script>

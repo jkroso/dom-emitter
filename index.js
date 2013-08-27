@@ -12,8 +12,6 @@ var on = emitter.on
 
 module.exports = Emitter
 
-Emitter.bind = bind
-Emitter.unbind = unbind
 
 function Emitter(o){
 	if (this instanceof Emitter) {
@@ -23,6 +21,24 @@ function Emitter(o){
 			o[k] = Emitter.prototype[k]
 		}
 		return o
+	}
+}
+
+Emitter.bind = bind
+Emitter.unbind = unbind
+Emitter.parse = parse
+
+/**
+ * convenience function for binding all events
+ *
+ * @param {emitter} self
+ * @api public
+ */
+
+Emitter.bindEvents = function(self){
+	for (var type in self._events) {
+		type = parse(type)
+		bind(self, type.name, type.selector)
 	}
 }
 
@@ -48,7 +64,7 @@ Emitter.prototype.on = function(type, fn){
 		fn = getMethod(fn, parsed.name, this)
 	}
 	on.call(this, type, fn)
-	bind(this, parsed.name, parsed.selector)
+	if (this.el) bind(this, parsed.name, parsed.selector)
 	return this
 }
 
@@ -72,7 +88,7 @@ Emitter.prototype.off = function(type, fn){
 		fn = getMethod(fn, parsed.name, this)
 	}
 	off.call(this, type, fn)
-	unbind(this, parsed.name, parsed.selector)
+	if (this.el) unbind(this, parsed.name, parsed.selector)
 	return this
 }
 
