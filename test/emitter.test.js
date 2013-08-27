@@ -256,4 +256,11 @@ describe('inheriting events', function(){
 		happen.click(node)
 		spy.should.have.been.called(3)
 	})
+
+	it('should handle multiple handlers per event', function(){
+		Class.prototype.on('click', spy).on('click', spy)
+		new Class()
+		happen.click(node)
+		spy.should.have.been.called(2)
+	})
 })
