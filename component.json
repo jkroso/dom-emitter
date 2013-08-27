@@ -11,16 +11,19 @@
     "emitter"
   ],
   "dependencies": {
-    "component/event": "0.1.1",
+    "jkroso/unique-selector": "0.0.2",
     "jkroso/dom-event": "0.3.1",
-    "jkroso/unique-selector": "0.0.2"
+    "component/event": "0.1.1",
+    "component/query": "0.0.1",
+    "jkroso/emitter": "0.7.0",
+    "yields/merge": "1.0.0"
   },
   "development": {
-    "chaijs/chai-spies": "0.5.1",
-    "chaijs/chai": "1.7.2",
-    "tmcw/happen": "v0.1.2",
     "visionmedia/mocha": "1.12.0",
-    "jkroso/serve": "1.5.0"
+    "chaijs/chai-spies": "0.5.1",
+    "tmcw/happen": "v0.1.2",
+    "jkroso/serve": "1.5.0",
+    "chaijs/chai": "1.7.2"
   },
   "license": "MIT",
   "scripts": [

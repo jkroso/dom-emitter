@@ -1,166 +1,172 @@
 
+var emitter = require('emitter/light').prototype
 var unique = require('unique-selector')
-  , domEvent = require('dom-event')
-  , event = require('event')
+var domEvent = require('dom-event')
+var query = require('query')
+var event = require('event')
+var merge = require('merge')
+var own = {}.hasOwnProperty
+var emit = emitter.emit
+var off = emitter.off
+var on = emitter.on
 
-module.exports = DomEmitter
+module.exports = Emitter
 
-/**
- * Initialize a `DomEmitter`. If you provide a `context`
- * then that will be the source of implies methods. It 
- * will also be `this` inside handlers.
- *
- *   new DomEmitter(document.body, {
- *     onClick: console.log  
- *   })
- *   
- * @param {DomElement} el
- * @param {Object} [context] defaults to `el`
- */
+Emitter.bind = bind
+Emitter.unbind = unbind
 
-function DomEmitter(el, context) {
-	this.el = el
-	this._emitterCtx = context || el
-	this._bindings = {}
-	this._behaviours = {}
+function Emitter(o){
+	if (this instanceof Emitter) {
+		this.el = o
+	} else {
+		for (var k in Emitter.prototype) {
+			o[k] = Emitter.prototype[k]
+		}
+		return o
+	}
 }
 
 /**
- * Bind to `type` with optional `method`. When `method` is 
- * undefined it inferred from `type`. Delegation is can be
- * specified in `type`
+ * Bind `fn` to `type` events. When `fn` is `undefined`
+ * it will be inferred from `type`. Delegation can also be
+ * specified in `type` by leaving a space then a css
+ * selector which is relative to `this.el`.
  *
- *    events.on('click', 'onClick')
- *    events.on('click') // implies "onClick"
- *    events.on('click', function (e) {})
- *    events.on('click .ok') // delegates to `.ok`
+ *    this.on('click', this.onClick)
+ *    this.on('click', 'onClick')
+ *    this.on('click')     // implies "onClick"
+ *    this.on('click .ok') // delegates to `.ok`
+ *
+ * @param {String} type
+ * @param {String} [fn]
+ * @return {this}
+ */
+
+Emitter.prototype.on = function(type, fn){
+	var parsed = parse(type)
+	if (typeof fn != 'function') {
+		fn = getMethod(fn, parsed.name, this)
+	}
+	on.call(this, type, fn)
+	bind(this, parsed.name, parsed.selector)
+	return this
+}
+
+/**
+ * unbind `fn` from `type` events
+ *
+ * All the following are equivalent:
+ *
+ *   this.off('click', this.onClick)
+ *   this.off('click', 'onClick')
+ *   this.off('click')
  *
  * @param {String} type
  * @param {String} [method]
  * @return {this}
  */
 
-DomEmitter.prototype.on = function(type, method){
-	if (typeof type == 'object') return bindAll(this, type)
+Emitter.prototype.off = function(type, fn){
 	var parsed = parse(type)
-	var name = parsed.name
-	var binding = (this._bindings || (this._bindings = {}))[name]
-
-	if (typeof method != 'function') {
-		method = getMethod(method, name, getCtx(this))
+	if (typeof fn != 'function') {
+		fn = getMethod(fn, parsed.name, this)
 	}
-
-	// bind to the dom
-	if (!binding) {
-		var path = unique(this.el) + ' '
-		var context = getCtx(this)
-		var behaviours = this._behaviours || (this._behaviours = {})
-
-		binding = this._bindings[name] = function dispatcher(e){
-			// main
-			emit(context, behaviours[name], e)
-			
-			// delegated
-			var selectors = dispatcher.selectors
-			var len = selectors.length
-			if (!len || e.target === this) return
-			if (!(document.querySelector(path) === this && /^(?:#|BODY)/.test(path))) {
-				path = unique(this) + ' '
-			}
-			for (var i = 0; i < len; i++) {
-				var targ = match(this, e.target, path + selectors[i])
-				if (targ) {
-					e.delegate = targ
-					emit(context, behaviours[name+' '+selectors[i]], e)
-				}
-			}
-		}
-
-		binding.deps = 0
-		binding.selectors = []
-		event.bind(this.el, name, binding)
-	}
-
-	// count
-	binding.deps++
-	
-	if (parsed.selector) {
-		binding.selectors = binding.selectors.concat(parsed.selector)
-	}
-
-	addBehavior(this._behaviours, type, method)
-
+	off.call(this, type, fn)
+	unbind(this, parsed.name, parsed.selector)
 	return this
 }
 
 /**
- * bind several functions
+ * Create a DOM event and send it down to `this.el`.
+ * Any data you pass will be merged with the event
+ * object.
  *
- * @param {DomEmitter} self
- * @param {Object} events
- * @api private
+ *   this.emit('mousedown')
+ *   this.emit('login', {user: user})
+ *   this.emit('keydown', {key: 'enter'})
+ *
+ * @param {String} topic
+ * @param {Object} [data]
+ * @return {this}
  */
 
-function bindAll(self, events){
-	for (var event in events) {
-		var fn = events[event]
-		if (typeof fn != 'function') {
-			throw new Error(event+' not a function')
+Emitter.prototype.emit = function(topic, data){
+	var event = domEvent(topic, data)
+	merge(event, data)
+	this.el.dispatchEvent(event)
+	return this
+}
+
+/**
+ * hook into the DOM
+ *
+ * @param {Emitter} self
+ * @param {String} type
+ * @param {String} selector
+ */
+
+function bind(self, type, selector){
+	if (!own.call(self, '_bindings')) self._bindings = {}
+	var fn = self._bindings[type]
+
+	if (typeof fn != 'function') {
+		var path = unique(self.el) + ' '
+		fn = self._bindings[type] = function(e){
+			var selects = fn.selectors
+			var len = selects.length
+
+			// delegations
+			if (len && e.target !== this) {
+				// ensure root path is correct
+				if (query(path) != this || !(/^(?:#|BODY)/).test(path)) {
+					path = unique(this) + ' '
+				}
+
+				var i = 0
+				while (i < len) {
+					var select = selects[i++]
+					var target = match(this, e.target, path + select)
+					if (target) {
+						e.delegate = target
+						emit.call(self, type + ' ' + select, e)
+					}
+				}
+			}
+
+			emit.call(self, type, e)
 		}
-		self.on(event, fn)
+
+		fn.deps = 0
+		fn.selectors = []
+		event.bind(self.el, type, fn)
+	}
+
+	// count
+	fn.deps++
+	if (typeof selector == 'string' && selector) {
+		fn.selectors = fn.selectors.concat(selector)
 	}
 }
 
 /**
  * lookup an events implied method in the `context` object
- * 
+ *
  * @param {String} [name]
  * @param {String} type
  * @param {Object} context
  * @api private
  */
 
-function getMethod (name, type, context) {
-	name = typeof name === 'string'
-		? context[name]
-		: context['on' + type[0].toUpperCase() + type.slice(1)]
-	if (!name) throw new Error('Can\'t find a method for '+type)
-	return name
-}
-
-function emit (ctx, handlers, data) {
-	if (!handlers) return 
-	for (var i = 0, len = handlers.length; i < len; i++) {
-		handlers[i].call(ctx, data)
-	}
+function getMethod (name, type, ctx) {
+	var fn = typeof name === 'string'
+		? ctx[name]
+		: ctx['on' + type[0].toUpperCase() + type.slice(1)]
+	if (!fn) throw new Error('Can\'t find a method for '+type)
+	return fn
 }
 
 /**
- * get the execution context for `emitter`
- * 
- * @param {DomEmitter} emitter
- * @return {Object}
- */
-
-function getCtx(emitter){
-	return emitter._emitterCtx || emitter
-}
-
-function addBehavior (obj, name, fn) {
-	if (obj[name]) obj[name] = obj[name].concat(fn)
-	else obj[name] = [fn]
-}
-
-function removeBehaviour (obj, name, fn) {
-	if (!obj[name]) return
-	obj[name] = obj[name].filter(function (a) {
-		return a !== fn
-	})
-	if (!obj[name].length) delete obj[name]
-}
-
-/**
- * Return the first Element between `bottom` and 
+ * Return the first Element between `bottom` and
  * `top` that matches the selector
  *
  * @param {Element} top
@@ -170,8 +176,8 @@ function removeBehaviour (obj, name, fn) {
  * @api private
  */
 
-function match (top, bottom, selector) {
-	var nodes = top.querySelectorAll(selector)
+function match(top, bottom, selector){
+	var nodes = query.all(selector, top)
 	var len = nodes.length
 
 	while (bottom && bottom !== top) {
@@ -183,120 +189,27 @@ function match (top, bottom, selector) {
 }
 
 /**
- * Remove a single behavior
- * 
- * All the following are equivalent:
+ * unhook from the DOM
  *
- *   events.off('click', 'onClick')
- *   events.off('click') // implies 'onClick'
- *   events.off('click', events.onClick)
- *
+ * @param {Emitter} self
  * @param {String} type
- * @param {String} [method]
- * @return {this}
+ * @param {String} selector
  */
 
-DomEmitter.prototype.off = function(type, method){
-	if (!this._bindings) return this
-	if (typeof type == 'object') {
-		for (var name in type) {
-			this.off(name, type[name])
-		}
-		return this
-	}
+function unbind(self, type, selector){
+	if (!own.call(self, '_bindings')) return
+	var fn = self._bindings[type]
 
-	var parsed = parse(type)
-	var name = parsed.name
-	var binding = this._bindings[name]
-
-	if (typeof method != 'function') {
-		method = getMethod(method, name, getCtx(this))
-	}
-
-	if (--binding.deps <= 0) {
-		delete this._bindings[name]
-		event.unbind(this.el, name, binding)
-	} else if (parsed.selector) {
-		binding.selectors = binding.selectors.filter(function (s) {
-			return s !== parsed.selector
+	if (typeof selector == 'string' && selector) {
+		fn.selectors = fn.selectors.filter(function(str){
+			return str != selector
 		})
 	}
 
-	removeBehaviour(this._behaviours, type, method)
-
-	return this
-}
-
-/**
- * Add listener but remove it after one call
- * @see DomEmitter#on
- */
-
-DomEmitter.prototype.once = function (topic, method) {
-	if (typeof method != 'function') {
-		method = getMethod(method, parse(topic).name, getCtx(this))
+	if (--fn.deps <= 0) {
+		delete self._bindings[type]
+		event.unbind(self.el, type, fn)
 	}
-	var self = this
-	return this.on(topic, function once(e){
-		method.call(this, e)
-		self.off(topic, once)
-	})
-}
-
-/**
- * Create a DOM event and send it down to the DomEmitter's 
- * target. Any data you pass will be merged with the event 
- * object
- *
- *   manager.emit('mousedown')
- *   manager.emit('login', {user: user})
- *   manager.emit('keydown', {key: 'enter'})
- * 
- * @param {String} topic
- * @param {Any} [data]
- * @return {this}
- */
-
-DomEmitter.prototype.emit = function (topic, data) {
-	var event = domEvent(topic, data)
-
-	// merge 
-	if (data) for (var key in data) {
-		event[key] = data[key]
-	}
-
-	this.el.dispatchEvent(event)
-
-	return this
-}
-
-/**
- * Remove all bound functions.
- * Optionally limited to a certain topic
- *
- *   this.clear() // all
- *   this.clear('click') // just click handlers
- *
- * @param {String} [topic]
- * @return {this}
- */
-
-DomEmitter.prototype.clear = function (topic) {
-	if (topic != null) return clearTopic(this, topic)
-	for (topic in this._behaviours) {
-		clearTopic(this, topic)
-	}
-	return this
-}
-
-function clearTopic (self, topic) {
-	var name = parse(topic).name
-	var binding = self._bindings[name]
-
-	binding && event.unbind(self.el, binding);
-
-	delete self._bindings[name];
-	delete self._behaviours[topic];
 }
 
 /**
@@ -309,6 +222,8 @@ function clearTopic (self, topic) {
 
 function parse(str) {
 	str = str.split(' ')
-	var event = str.shift()
-	return { name: event, selector: str.join(' ') }
+	return {
+		name: str.shift(),
+		selector: str.join(' ')
+	}
 }

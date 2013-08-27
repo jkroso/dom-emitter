@@ -18,11 +18,9 @@
       var mocha = require('mocha')
       mocha.setup('bdd')
 
-      require('./index.test')
+      require('./emitter.test')
 
-      mocha.run(function () {
-        console.log('Done!')
-      })
+      mocha.run()
     </script>
   </body>
 </html>
