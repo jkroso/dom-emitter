@@ -1,6 +1,6 @@
-# Dom Emitter
+# Dom-Emitter
 
-Manage the events of a DOM element.
+A mixin class for managing the events of a MVC style View.
 
 ## Features
 
@@ -11,130 +11,70 @@ Manage the events of a DOM element.
 - convenient method binding
 - efficient context binding (no fn.bind(this))
 
-## Examples
+## Installation
 
-```js
-var body = new DomEmitter(document.body)
-body.on('click', console.log)
-body.emit('click', {x:50,y:112})
-// => {type: 'click', x:50, y:112, ...}
+_With [component](//github.com/component/component), [packin](//github.com/jkroso/packin) or [npm](//github.com/isaacs/npm)_
+
+    $ {package mananger} install jkroso/dom-emitter
+
+then in your app:
+
+```javascript
+var Emitter = require('dom-emitter')
 ```
-
-It is also has a simple system for inferring methods from the name of the event:
-
-```js
-function Button () {
-	this.view = document.createElement('button')
-	this.events = new DomEmitter(this.view, this)
-	this.events.on('click')
-}
-Button.prototype.onClick = console.log
-new Button().events.emit('click', {x:50,y:112})
-// => {type: 'click', x:50, y:112, ...}
-```
-
-Delegation. leave a space then write a CSS query:
-
-```js
-body.on('click > div.button') // infers "onClick"
-```
-Will only be triggered if a click occurs within a direct child of `document.body` that has a `tagName` of "div" and a "button" class.
-
-Naming delegated functions can be a bit tricky so sometimes its more readable to declare them in an object:
-
-```js
-body.on({
-	'click > div.button': console.log,
-	'mousedown > div.button': function(e){
-		e.delegate.style.backgroundColor = '#888'
-	},
-	'login': function(e){
-		alert('Welcome!')
-	}
-})
-```
-
-## Getting Started
-
-With component
-
-	$ component install jkroso/dom-emitter
-
-With npm
-
-	$ npm install jkroso/dom-emitter --save
 
 ## API
 
-```javascript
-var DomEmitter = require('dom-emitter')
-```
-  - [DomEmitter()](#domemitter)
-  - [DomEmitter.on()](#domemitterontypestringmethodstring)
-  - [DomEmitter.off()](#domemitterofftypestringmethodstring)
-  - [DomEmitter.once()](#domemitteronce)
-  - [DomEmitter.emit()](#domemitteremittopicstringdataany)
-  - [DomEmitter.clear()](#domemittercleartopicstring)
+### Emitter(object)
 
-### DomEmitter()
+  mix `Emitter` methods on to `object`
 
-  Initialize a `DomEmitter`. If you provide a `context`
-  then that will be the source of implies methods. It 
-  will also be `this` inside handlers.
-  
+### Emitter.on(type:String, [fn]:String)
+
+  Bind `fn` to `type` events. When `fn` is `undefined`
+  it will be inferred from `type`. Delegation can also be
+  specified in `type` by leaving a space then a css
+  selector which is relative to `this.el`.
+
 ```js
-new DomEmitter(document.body, {
-  onClick: console.log  
-})
+ this.on('click', this.onClick)
+ this.on('click', 'onClick')
+ this.on('click')     // implies "onClick"
+ this.on('click .ok') // delegates to `.ok`
 ```
 
-### DomEmitter.on(type:String, [method]:String)
+### Emitter.off(type:String, [method]:String)
 
-  Bind to `type` with optional `method`. When `method` is 
-  undefined it inferred from `type`. Delegation is can be
-  specified in `type`
-  
-```js
- events.on('click', 'onClick')
- events.on('click') // implies "onClick"
- events.on('click', function (e) {})
- events.on('click .ok') // delegates to `.ok`
-```
+  unbind `fn` from `type` events
 
-### DomEmitter.off(type:String, [method]:String)
-
-  Remove a single behavior
-  
   All the following are equivalent:
-  
+
 ```js
-events.off('click', 'onClick')
-events.off('click') // implies 'onClick'
-events.off('click', events.onClick)
+this.off('click', this.onClick)
+this.off('click', 'onClick')
+this.off('click')
 ```
 
-### DomEmitter.once()
+### Emitter.emit(topic:String, [data]:Object)
 
-  Add listener but remove it after one call
+  Create a DOM event and send it down to `this.el`.
+  Any data you pass will be merged with the event
+  object.
 
-### DomEmitter.emit(topic:String, [data]:Any)
-
-  Create a DOM event and send it down to the DomEmitter's 
-  target. Any data you pass will be merged with the event 
-  object
-  
 ```js
-manager.emit('mousedown')
-manager.emit('login', {user: user})
-manager.emit('keydown', {key: 'enter'})
+this.emit('mousedown')
+this.emit('login', {user: user})
+this.emit('keydown', {key: 'enter'})
 ```
 
-### DomEmitter.clear([topic]:String)
+### bind()
 
-  Remove all bound functions.
-  Optionally limited to a certain topic
-  
-```js
-this.clear() // all
-this.clear('click') // just click handlers
-```
+  hook into the DOM
+
+### unbind()
+
+  unhook from the DOM
+
+### bindEvents(self:emitter)
+
+  convenience function for binding all events
