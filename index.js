@@ -20,7 +20,7 @@ module.exports = DomEmitter
 
 function DomEmitter(el, context) {
 	this.el = el
-	this.context = context || el
+	this._emitterCtx = context || el
 	this._bindings = {}
 	this._behaviours = {}
 }
@@ -143,7 +143,7 @@ function emit (ctx, handlers, data) {
  */
 
 function getCtx(emitter){
-	return emitter.context || emitter
+	return emitter._emitterCtx || emitter
 }
 
 function addBehavior (obj, name, fn) {
