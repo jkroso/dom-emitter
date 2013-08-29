@@ -3,13 +3,6 @@
   "repo": "jkroso/dom-emitter",
   "description": "Manage the events of a DOM element",
   "version": "0.7.0",
-  "keywords": [
-    "event",
-    "events",
-    "subscriptions",
-    "dom",
-    "emitter"
-  ],
   "dependencies": {
     "jkroso/unique-selector": "0.0.2",
     "jkroso/dom-event": "0.3.1",
@@ -21,12 +14,19 @@
   "development": {
     "visionmedia/mocha": "1.12.0",
     "chaijs/chai-spies": "0.5.1",
-    "tmcw/happen": "v0.1.2",
+    "tmcw/happen": "v0.1.3",
     "jkroso/serve": "1.5.0",
     "chaijs/chai": "1.7.2"
   },
-  "license": "MIT",
   "scripts": [
     "index.js"
-  ]
+  ],
+  "keywords": [
+    "event",
+    "events",
+    "subscriptions",
+    "dom",
+    "emitter"
+  ],
+  "license": "MIT"
 }

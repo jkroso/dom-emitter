@@ -1,5 +1,5 @@
 
-var happen = require('happen/src/happen')
+var happen = require('happen')
 var chai = require('./chai')
 var Emitter = require('..')
 
